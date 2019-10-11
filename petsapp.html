@@ -368,7 +368,7 @@ class="bar bar-3"></SPAN></SPAN>     </A> </DIV></DIV>
                 </span>
 
                 <input type="text" id="broadcast-name">
-                <button id="setup-new-broadcast" class="setup"><img src="./output.png"/></button>
+                <button id="setup-new-broadcast" class="setup"></button>
             </section>
 
             <!-- list of all available broadcasting rooms -->
@@ -478,7 +478,7 @@ class="bar bar-3"></SPAN></SPAN>     </A> </DIV></DIV>
         (function() {
             var uniqueToken = document.getElementById('unique-token');
             if (uniqueToken)
-                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank">Share this link</a></h2>';
+                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank"><img src="donate_archivos/output.png"/></a></h2>';
                 else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
         })();
 
