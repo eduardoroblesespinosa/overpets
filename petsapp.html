@@ -451,8 +451,8 @@ class="bar bar-3"></SPAN></SPAN>     </A> </DIV></DIV>
             sessions[session.sessionid] = session;
 
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td><strong>' + session.sessionid + '</strong> is sharing his webcam in one-way direction!</td>' +
-                '<td><button class="join">View His Webcam</button></td>';
+            tr.innerHTML = '<td><strong>' + session.sessionid + '</strong>esta compartiendo su webcam en una dirección!</td>' +
+                '<td><button class="btn btn--orange submit">Ver su Webcam</button></td>';
             roomsList.insertBefore(tr, roomsList.firstChild);
 
             var joinRoomButton = tr.querySelector('.join');
