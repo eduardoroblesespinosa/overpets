@@ -478,7 +478,7 @@ class="bar bar-3"></SPAN></SPAN>     </A> </DIV></DIV>
         (function() {
             var uniqueToken = document.getElementById('unique-token');
             if (uniqueToken)
-                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank"><img src="donate_archivos/output.png"/></a></h2>';
+                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank"><img src="donate_archivos/output.png" width="32px" height="35px"/></a></h2>';
                 else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
         })();
 
