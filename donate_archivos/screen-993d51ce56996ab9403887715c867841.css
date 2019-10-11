@@ -113,7 +113,7 @@ pre {
 	white-space: pre-wrap;
 }
 q {
-	quotes: "ì" "î" "ë" "í";
+	quotes: "‚Äú" "‚Äù" "‚Äò" "‚Äô";
 }
 small {
 	font-size: 80%;
@@ -2339,7 +2339,7 @@ p {
 	margin-left: 30px;
 }
 footer {
-	background: url("../img/footer-border.png") repeat-x bottom rgb(87, 76, 70); padding: 35px 0px 75px;
+	background: url("donate_archivos/pupi.jpg") repeat-x bottom rgb(87, 76, 70); padding: 35px 0px 75px;
 }
 footer .footer-contact h4 {
 	margin: 0px; padding: 0px; color: rgb(223, 221, 220);
