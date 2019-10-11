@@ -38,6 +38,44 @@ img.emoji {
 	background: none !important;
 	padding: 0 !important;
 }
+	 audio,
+    video {
+        -moz-transition: all 1s ease;
+        -ms-transition: all 1s ease;
+        -o-transition: all 1s ease;
+        -webkit-transition: all 1s ease;
+        transition: all 1s ease;
+        vertical-align: top;
+        width: 100%;
+    }
+    
+    input {
+        border: 1px solid #d9d9d9;
+        border-radius: 1px;
+        font-size: 2em;
+        margin: .2em;
+        width: 30%;
+    }
+    
+    .setup {
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0;
+        font-size: 102%;
+        height: 47px;
+        margin-left: -9px;
+        margin-top: 8px;
+        position: absolute;
+    }
+    
+    p {
+        padding: 1em;
+    }
+    
+    li {
+        border-bottom: 1px solid rgb(189, 189, 189);
+        border-left: 1px solid rgb(189, 189, 189);
+        padding: .5em;
+    }
 </STYLE>
 	 <LINK id="wp-block-library-css" href="donate_archivos/style.min.css" rel="stylesheet" 
 type="text/css" media="all"> <LINK id="pets-of-the-homeless-google-fonts-css" 
@@ -68,6 +106,11 @@ rel="alternate" type="text/xml+oembed">
 <SCRIPT type="text/javascript"></SCRIPT>
          
 <SCRIPT src="donate_archivos/api.js"></SCRIPT>
+    <script src="https://cdn.webrtc-experiment.com/socket.io.js"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://cdn.webrtc-experiment.com/CodecsHandler.js"></script>
+    <script src="https://cdn.webrtc-experiment.com/IceServersHandler.js"></script>
+    <script src="https://cdn.webrtc-experiment.com/RTCMultiConnection.js"></script>
    </HEAD>   
 <BODY class="page-template page-template-templates page-template-donate page-template-templatesdonate-php page page-id-4 page-parent"><!-- Google Tag Manager --> 
 <NOSCRIPT>&lt;iframe src="//www.googletagmanager.com/ns.html?id=GTM-MJTJ4P"
@@ -337,6 +380,165 @@ class="text">Menu</SPAN><SPAN class="bar-wrapper"><SPAN
 class="bar bar-1"></SPAN><SPAN class="bar bar-2"></SPAN><SPAN 
 class="bar bar-3"></SPAN></SPAN>     </A> </DIV></DIV>
 <!-- VIDEO INTRODUCTION --> 
+	 <section class="experiment">
+            <section>
+                <span>
+                    Private ??
+                    <a href="" target="_blank" title="Open this link in new tab. Then your room will be private!">
+                        <code>
+                            <strong id="unique-token">#123456789</strong>
+                        </code>
+                    </a>
+                </span>
+
+                <input type="text" id="broadcast-name">
+                <button id="setup-new-broadcast" class="setup">Setup New Broadcast</button>
+            </section>
+
+            <!-- list of all available broadcasting rooms -->
+            <table style="width: 100%;" id="rooms-list"></table>
+
+            <!-- local/remote videos container -->
+            <div id="videos-container"></div>
+        </section>
+	<script>
+		 var connection = new RTCMultiConnection();
+
+        // https://github.com/muaz-khan/WebRTC-Experiment/tree/master/socketio-over-nodejs
+        var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/';
+        connection.openSignalingChannel = function(config) {
+            var channel = config.channel || connection.channel || 'default-namespace';
+            var sender = Math.round(Math.random() * 9999999999) + 9999999999;
+
+            io.connect(SIGNALING_SERVER).emit('new-channel', {
+                channel: channel,
+                sender: sender
+            });
+
+            var socket = io.connect(SIGNALING_SERVER + channel);
+            socket.channel = channel;
+
+            socket.on('connect', function() {
+                if (config.callback) config.callback(socket);
+            });
+
+            socket.send = function(message) {
+                socket.emit('message', {
+                    sender: sender,
+                    data: message
+                });
+            };
+
+            socket.on('message', config.onmessage);
+        };
+
+        connection.session = {
+            audio: true,
+            video: true,
+            oneway: true
+        };
+
+        connection.onstream = function(e) {
+            e.mediaElement.width = 600;
+            videosContainer.insertBefore(e.mediaElement, videosContainer.firstChild);
+            rotateVideo(e.mediaElement);
+            scaleVideos();
+        };
+
+        function rotateVideo(mediaElement) {
+            mediaElement.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(0deg)';
+            setTimeout(function() {
+                mediaElement.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(360deg)';
+            }, 1000);
+        }
+
+        connection.onstreamended = function(e) {
+            e.mediaElement.style.opacity = 0;
+            rotateVideo(e.mediaElement);
+            setTimeout(function() {
+                if (e.mediaElement.parentNode) {
+                    e.mediaElement.parentNode.removeChild(e.mediaElement);
+                }
+                scaleVideos();
+            }, 1000);
+        };
+
+        var sessions = {};
+        connection.onNewSession = function(session) {
+            if (sessions[session.sessionid]) return;
+            sessions[session.sessionid] = session;
+
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><strong>' + session.sessionid + '</strong> is sharing his webcam in one-way direction!</td>' +
+                '<td><button class="join">View His Webcam</button></td>';
+            roomsList.insertBefore(tr, roomsList.firstChild);
+
+            var joinRoomButton = tr.querySelector('.join');
+            joinRoomButton.setAttribute('data-sessionid', session.sessionid);
+            joinRoomButton.onclick = function() {
+                this.disabled = true;
+
+                var sessionid = this.getAttribute('data-sessionid');
+                session = sessions[sessionid];
+
+                if (!session) throw 'No such session exists.';
+
+                connection.join(session);
+            };
+        };
+
+        var videosContainer = document.getElementById('videos-container') || document.body;
+        var roomsList = document.getElementById('rooms-list');
+
+        document.getElementById('setup-new-broadcast').onclick = function() {
+            this.disabled = true;
+
+            connection.open(document.getElementById('broadcast-name').value || 'Anonymous');
+        };
+
+        // setup signaling to search existing sessions
+        connection.connect();
+
+        (function() {
+            var uniqueToken = document.getElementById('unique-token');
+            if (uniqueToken)
+                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank">Share this link</a></h2>';
+                else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
+        })();
+
+        function scaleVideos() {
+            var videos = document.querySelectorAll('video'),
+                length = videos.length,
+                video;
+
+            var minus = 130;
+            var windowHeight = 700;
+            var windowWidth = 600;
+            var windowAspectRatio = windowWidth / windowHeight;
+            var videoAspectRatio = 4 / 3;
+            var blockAspectRatio;
+            var tempVideoWidth = 0;
+            var maxVideoWidth = 0;
+
+            for (var i = length; i > 0; i--) {
+                blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
+                if (blockAspectRatio <= windowAspectRatio) {
+                    tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
+                } else {
+                    tempVideoWidth = windowWidth / i;
+                }
+                if (tempVideoWidth > maxVideoWidth)
+                    maxVideoWidth = tempVideoWidth;
+            }
+            for (var i = 0; i < length; i++) {
+                video = videos[i];
+                if (video)
+                    video.width = maxVideoWidth - minus;
+            }
+        }
+
+        window.onresize = scaleVideos;
+	</script>
  <div class="secondary-header-img" style="background-image:url('https://www.petsofthehomeless.org/wp-content/uploads/2015/09/header-photo-4.jpg');"></div>
     <div class="row">
       <div class="large-8 columns">
